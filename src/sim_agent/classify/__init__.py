@@ -1,0 +1,1 @@
+"""Simulation type classification."""

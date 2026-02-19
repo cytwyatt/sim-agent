@@ -1,0 +1,22 @@
+[defaults]
+top_n = 10
+years = 10
+output_dir = "outputs"
+deep_profiles = ["MD"]
+use_sqlite = true
+
+[ranking]
+relevance_weight = 0.6
+recency_weight = 0.25
+citation_weight = 0.15
+
+[models]
+openai_model = "gpt-4.1-mini"
+openai_base_url = "https://api.openai.com/v1"
+
+[validation]
+md_timestep_fs_min = 0.1
+md_timestep_fs_max = 10.0
+temperature_k_min = 1.0
+temperature_k_max = 2000.0
+pressure_bar_max = 10000.0
