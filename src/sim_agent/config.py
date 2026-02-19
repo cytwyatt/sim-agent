@@ -54,8 +54,31 @@ def _as_dict(path: Path) -> dict:
         return tomllib.load(f)
 
 
+def _load_dotenv(path: Path) -> None:
+    if not path.exists():
+        return
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return
+
+    for raw_line in lines:
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        if not key:
+            continue
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+            value = value[1:-1]
+        os.environ.setdefault(key, value)
+
+
 def load_config(config_path: str | Path | None = None) -> AppConfig:
     path = Path(config_path) if config_path else Path("sim_agent.toml")
+    _load_dotenv(path.parent / ".env")
     data = _as_dict(path)
 
     defaults_data = data.get("defaults", {})

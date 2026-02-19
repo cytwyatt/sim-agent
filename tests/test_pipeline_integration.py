@@ -70,6 +70,7 @@ def test_pipeline_mixed_domain(monkeypatch, tmp_path: Path):
     assert result.markdown_path.exists()
     assert result.html_path.exists()
     assert result.summary_json_path.exists()
+    assert result.candidate_titles_path.exists()
 
     types = {record.simulation_type for record in result.records}
     assert "MD" in types

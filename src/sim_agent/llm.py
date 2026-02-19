@@ -35,9 +35,11 @@ class OpenAIClient:
                 {"role": "user", "content": user_prompt},
             ],
             "temperature": temperature,
-            "max_tokens": max_tokens,
             "response_format": {"type": "json_object"},
         }
+        # Newer GPT-5 models require max_completion_tokens instead of max_tokens.
+        token_key = "max_completion_tokens" if self.model.lower().startswith("gpt-5") else "max_tokens"
+        payload[token_key] = max_tokens
 
         data = json.dumps(payload).encode("utf-8")
         req = Request(f"{self.base_url}/chat/completions", data=data, method="POST")

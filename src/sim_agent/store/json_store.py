@@ -50,6 +50,12 @@ class JsonStore:
         path.write_text(html, encoding="utf-8")
         return path
 
+    def save_candidate_titles(self, run_id: str, payload: dict[str, Any]) -> Path:
+        run_dir = self.run_dir(run_id)
+        path = run_dir / "candidate_titles.json"
+        path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+        return path
+
     def load_paper(self, run_id: str, paper_id: str) -> dict[str, Any]:
         path = self.runs_root / run_id / "papers" / f"{_safe_name(paper_id)}.json"
         return json.loads(path.read_text(encoding="utf-8"))
@@ -69,6 +75,10 @@ class JsonStore:
     def load_html(self, run_id: str) -> str:
         path = self.runs_root / run_id / "summary.html"
         return path.read_text(encoding="utf-8")
+
+    def load_candidate_titles(self, run_id: str) -> dict[str, Any]:
+        path = self.runs_root / run_id / "candidate_titles.json"
+        return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _safe_name(raw: str) -> str:

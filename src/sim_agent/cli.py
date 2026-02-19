@@ -78,6 +78,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Markdown: {result.markdown_path}")
         print(f"HTML: {result.html_path}")
         print(f"JSON summary: {result.summary_json_path}")
+        print(f"Candidate titles: {result.candidate_titles_path}")
         print(f"Papers analyzed: {len(result.records)}")
         return 0
 

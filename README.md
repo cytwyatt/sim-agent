@@ -7,6 +7,9 @@ CLI-first literature agent for simulation papers across MD, QM, QMMM, MC, CG, an
 ## Features
 
 - Semantic Scholar search with ranking and date filter.
+- LLM-assisted topic keyword expansion (with heuristic fallback).
+- Topic-adaptive constraints inferred per run (anchor concept groups + exclude terms).
+- Two-stage retrieval: broad heuristic pool (target 100 titles) then LLM title reranking.
 - Open-access PDF download with abstract fallback.
 - Simulation type classification (`MD`, `QM`, `QMMM`, `MC`, `CG`, `Other/Unknown`).
 - Core extraction schema for all papers.
@@ -48,9 +51,18 @@ citation_weight = 0.15
 openai_model = "gpt-4.1-mini"
 ```
 
+You can also keep API keys in a local `.env` file (auto-loaded, git-ignored):
+
+```env
+OPENAI_API_KEY=...
+```
+
 ## Commands
 
 - `uv run sim-agent run --topic "<text>" [--top-n N] [--years Y] [--deep-profiles MD,QMMM]`
 - `uv run sim-agent inspect --run-id <id> --paper-id <id>`
 - `uv run sim-agent export --run-id <id> --format markdown|json`
 - `uv run pytest -q`
+
+Each run now also writes `candidate_titles.json` containing the large heuristic pool and title-selection metadata.
+This includes inferred topic constraints, candidate pool metadata, and final selected paper IDs.
