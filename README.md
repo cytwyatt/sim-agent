@@ -13,7 +13,7 @@ CLI-first literature agent for simulation papers across MD, QM, QMMM, MC, CG, an
 - Semantic Scholar search with ranking and date filter.
 - LLM-assisted topic keyword expansion (with heuristic fallback).
 - Topic-adaptive constraints inferred per run (anchor concept groups + exclude terms).
-- Two-stage retrieval: broad heuristic pool (target 100 titles) then LLM title reranking.
+- Two-stage retrieval: broad heuristic pool (`heuristic_pool_target = max(100, top_n * 5)`) then LLM title reranking.
 - Open-access PDF download with abstract fallback.
 - Simulation type classification (`MD`, `QM`, `QMMM`, `MC`, `CG`, `Other/Unknown`).
 - Core extraction schema for all papers.
@@ -33,6 +33,84 @@ export OPENAI_API_KEY=...
 
 uv run sim-agent run --topic "protein-ligand binding free energy molecular dynamics"
 ```
+
+## Running a Topic Search (Step-by-Step)
+
+1. Prepare the environment.
+
+```bash
+uv venv
+uv sync --extra dev
+```
+
+2. Set `OPENAI_API_KEY` if you want LLM-based extraction and title reranking.
+
+```bash
+export OPENAI_API_KEY=...
+```
+
+3. Run a topic search (`uv` primary path).
+
+```bash
+uv run sim-agent run --topic "<topic>" --top-n N --years Y
+```
+
+4. Use this fallback if `uv` is unavailable.
+
+```bash
+PYTHONPATH=src python -m sim_agent.cli run --topic "<topic>" --top-n N --years Y
+```
+
+5. Example query (small-molecule inhibitors for ALD).
+
+```bash
+uv run sim-agent run \
+  --topic "small molecule inhibitor for atomic layer deposition" \
+  --top-n 12 \
+  --years 20
+```
+
+Notes:
+- The run depends on network access to Semantic Scholar/OpenAlex APIs.
+- Without network access, retrieval cannot complete.
+
+### Output Files
+
+Each run writes to `outputs/runs/<run_id>/` with this structure:
+
+```text
+outputs/runs/<run_id>/
+  candidate_titles.json
+  run_manifest.json
+  papers/*.json
+  summary.md
+  summary.html
+  summary.json
+```
+
+- `candidate_titles.json` is created early with retrieval/reranking metadata.
+- `papers/*.json` are written as selected papers are processed.
+- `summary.md`, `summary.html`, and `summary.json` appear after full extraction/report generation completes.
+
+### Candidate and Heuristic Pool Definitions
+
+- `candidate_count`: number of unique retrieved papers before final selection.
+- `heuristic_pool_target`: desired reranking pool size.
+- `heuristic_pool_size`: actual reranking pool size after ranking/filtering and availability constraints.
+
+Current pipeline logic:
+
+```text
+heuristic_pool_target = max(100, top_n * 5)
+heuristic_pool_size = min(len(ranked_for_pool), heuristic_pool_target)
+```
+
+Why `heuristic_pool_size` can be below 100:
+- If fewer papers survive ranking/topic constraints (`ranked_for_pool`) than the target, the pool is capped by available papers.
+
+How to control this:
+- Direct control: increase/decrease `--top-n` (or `[defaults].top_n` in `sim_agent.toml`).
+- Indirect control: broaden/narrow `--topic` and `--years` to change upstream retrieval breadth.
 
 ## Config
 
@@ -65,8 +143,9 @@ OPENAI_API_KEY=...
 
 - `uv run sim-agent run --topic "<text>" [--top-n N] [--years Y] [--deep-profiles MD,QMMM]`
 - `uv run sim-agent inspect --run-id <id> --paper-id <id>`
-- `uv run sim-agent export --run-id <id> --format markdown|json`
+- `uv run sim-agent export --run-id <id> --format markdown|json|html`
 - `uv run pytest -q`
+- See **Running a Topic Search (Step-by-Step)** for end-to-end run workflow and candidate-pool tuning details.
 
 Each run now also writes `candidate_titles.json` containing the large heuristic pool and title-selection metadata.
 This includes inferred topic constraints, candidate pool metadata, and final selected paper IDs.
